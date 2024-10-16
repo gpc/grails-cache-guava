@@ -14,7 +14,7 @@ The guava cache provides a simple in memory cache with maximal capacity and TTL.
 ```groovy
 dependencies {
     implementation 'org.grails.plugins:cache'
-    implementation 'io.github.gpc:cache-guava:2.0.0-SNAPSHOT'
+    implementation 'io.github.gpc:grails-cache-guava:2.0.0-SNAPSHOT'
 }
 ```
 
