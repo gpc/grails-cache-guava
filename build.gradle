@@ -149,3 +149,13 @@ nexusPublishing {
         }
     }
 }
+
+tasks.register('snapshotVersion') {
+    doLast {
+        if (isReleaseVersion) {
+            ant.propertyfile(file: "gradle.properties") {
+                entry(key: "version", value: "${project.version}-SNAPSHOT")
+            }
+        }
+    }
+}
