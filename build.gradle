@@ -76,9 +76,9 @@ publishing {
             artifact javadocJar
 
             pom {
-                name = 'Release Demo'
-                description = 'Release Demo for the GPC'
-                url = 'https://github.com/gpc/release-demo'
+                name = 'grails-cache-guava'
+                description = 'The guava cache provides a simple in memory cache with maximal capacity and TTL.'
+                url = 'https://github.com/gpc/grails-cache-guava'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -93,9 +93,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git://github.com/gpc/release-demo.git'
-                    developerConnection = 'scm:git:https://github.com/gpc/release-demo.git'
-                    url = 'https://github.com/gpc/release-demo'
+                    connection = 'scm:git:git://github.com/gpc/grails-cache-guava.git'
+                    developerConnection = 'scm:git:https://github.com/gpc/grails-cache-guava.git'
+                    url = 'https://github.com/gpc/grails-cache-guava'
                 }
             }
         }
