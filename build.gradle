@@ -6,7 +6,7 @@ plugins {
     id "application"
 }
 
-group "org.grails.plugins"
+group "io.github.gpc"
 
 repositories {
     mavenLocal()
