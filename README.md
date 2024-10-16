@@ -1,5 +1,7 @@
 # grails-cache-guava
 
+Forked from the archived project https://github.com/qube-ag/grails-cache-guava
+
 This Grails plugin extends the grails-cache plugin.
 
 The guava cache provides a simple in memory cache with maximal capacity and TTL.
