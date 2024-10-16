@@ -13,8 +13,8 @@ The guava cache provides a simple in memory cache with maximal capacity and TTL.
 
 ```groovy
 dependencies {
-    compile 'org.grails.plugins:cache:4.0.0'
-    compile 'org.grails.plugins:cache-guava:1.0.0'
+    implementation 'org.grails.plugins:cache'
+    implementation 'org.grails.plugins:cache-guava:2.0.0-SNAPSHOT'
 }
 ```
 
@@ -38,7 +38,7 @@ grails:
 
 The GrailsGuavaCacheManager is automatically configured by the plugin.
 
-### Annoations and Services
+### Annotations and Services
 
 Just use grails-cache's annotations and services as described in 
 its [documentation](http://grails-plugins.github.io/grails-cache/snapshot/guide/index.html)
