@@ -4,6 +4,9 @@ plugins {
     id "org.grails.grails-gsp"
     id "org.grails.grails-plugin" version '6.2.1'
     id "application"
+    id 'maven-publish'
+    id 'signing'
+    id "io.github.gradle-nexus.publish-plugin"
 }
 
 group "io.github.gpc"
@@ -61,6 +64,51 @@ tasks.withType(Test) {
     systemProperty "geb.build.reportsDir", reporting.file("geb/integrationTest")
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+            version = project.version
+
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = 'Release Demo'
+                description = 'Release Demo for the GPC'
+                url = 'https://github.com/gpc/release-demo'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'sbglasius'
+                        name = 'Søren Berg Glasius'
+                        email = 'soeren+gpc@glasius.dk'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/gpc/release-demo.git'
+                    developerConnection = 'scm:git:https://github.com/gpc/release-demo.git'
+                    url = 'https://github.com/gpc/release-demo'
+                }
+            }
+        }
+    }
+}
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+if (System.getenv('SIGNING_KEY_ID')) {
+    ext["signing.keyId"] = System.getenv('SIGNING_KEY_ID')
+    ext["signing.password"] = System.getenv('SIGNING_PASSPHRASE')
+    ext["signing.secretKeyRingFile"] = System.getenv('SIGNING_FILE')
+}
+
 //grailsPublish {
 //
 //    githubSlug = 'itds-ch/grails-cache-guava'
@@ -72,3 +120,43 @@ tasks.withType(Test) {
 //    developers = [mkobel: "Moritz obel", sbglasius: 'Søren Berg Glasius']
 //}
 
+afterEvaluate {
+    signing {
+        if (System.getenv('SIGN_ARMORED_KEY')) {
+            String signingKey = System.getenv('SIGN_ARMORED_KEY')
+            String signingPassword = System.getenv('SIGN_PASSWORD')
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
+        required {
+            isReleaseVersion
+        }
+
+        sign publishing.publications.maven
+    }
+}
+
+tasks.withType(Sign).configureEach {
+    onlyIf { isReleaseVersion }
+}
+
+import io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository
+
+tasks.withType(InitializeNexusStagingRepository).configureEach {
+    shouldRunAfter(tasks.withType(Sign))
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            def ossUser = System.getenv("SONATYPE_USERNAME") ?: project.hasProperty("sonatypeOssUsername") ? project.sonatypeOssUsername : ''
+            def ossPass = System.getenv("SONATYPE_PASSWORD") ?: project.hasProperty("sonatypeOssPassword") ? project.sonatypeOssPassword : ''
+            def ossStagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID") ?: project.hasProperty("sonatypeOssStagingProfileIdExternalConfig") ? project.sonatypeOssStagingProfileIdExternalConfig : ''
+
+            nexusUrl = uri("https://s01.oss.sonatype.org/service/local/")
+            snapshotRepositoryUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            username = ossUser
+            password = ossPass
+            stagingProfileId = ossStagingProfileId
+        }
+    }
+}
