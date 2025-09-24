@@ -1,155 +1,74 @@
-plugins {
-    id "groovy"
-    id "org.grails.grails-web"
-    id "org.grails.grails-gsp"
-    id "org.grails.grails-plugin" version '6.2.1'
-    id "application"
-    id 'maven-publish'
-    id 'signing'
-    id "io.github.gradle-nexus.publish-plugin" version '2.0.0'
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = "https://repo.grails.org/grails/restricted" }
+        maven {
+            url = 'https://repository.apache.org/content/groups/snapshots'
+            content {
+                includeVersionByRegex('org[.]apache[.](grails|groovy).*', '.*', '.*-SNAPSHOT')
+            }
+        }
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath platform("org.apache.grails:grails-bom:$grailsVersion")
+        classpath "org.apache.grails:grails-gradle-plugins"
+    }
 }
 
+version = projectVersion
 group "io.github.gpc"
 
+apply plugin: 'java-library'
+apply plugin: "org.apache.grails.gradle.grails-plugin"
+apply plugin: 'org.apache.grails.gradle.grails-publish'
+
+ext {
+    buildInstant = java.util.Optional.ofNullable(System.getenv("SOURCE_DATE_EPOCH"))
+            .filter(s -> !s.isEmpty())
+            .map(Long::parseLong)
+            .map(Instant::ofEpochSecond)
+            .orElseGet(Instant::now)
+    formattedBuildDate = DateTimeFormatter.ISO_INSTANT.format(buildInstant)
+    buildDate = (buildInstant as Instant).atZone(ZoneOffset.UTC) // for reproducible builds
+}
+
 repositories {
-    mavenLocal()
     mavenCentral()
-    maven { url "https://repo.grails.org/grails/core/" }
+    maven { url = 'https://repo.grails.org/grails/restricted' }
+    maven {
+        url = 'https://repository.apache.org/content/groups/snapshots'
+        content {
+            includeVersionByRegex('org[.]apache[.](grails|groovy).*', '.*', '.*-SNAPSHOT')
+        }
+    }
 }
 
 dependencies {
-    implementation("org.grails:grails-core")
-    implementation("org.grails:grails-logging")
-    implementation("org.grails:grails-plugin-services")
-    implementation("org.grails:grails-plugin-url-mappings")
-    implementation("org.grails:grails-web-boot")
-    implementation("org.springframework.boot:spring-boot-autoconfigure")
-    implementation("org.springframework.boot:spring-boot-starter-logging")
-    console("org.grails:grails-console")
-    testImplementation("org.spockframework:spock-core")
-    testImplementation("org.grails:grails-web-testing-support")
-    testImplementation("org.grails.plugins:geb")
-    testImplementation platform("org.seleniumhq.selenium:selenium-bom:${seleniumVersion}")
-    testImplementation("org.seleniumhq.selenium:selenium-api")
-    testImplementation("org.seleniumhq.selenium:selenium-remote-driver")
-    testImplementation("org.seleniumhq.selenium:selenium-support")
-    testImplementation("org.seleniumhq.selenium:selenium-http")
-    testImplementation("org.seleniumhq.selenium:selenium-chrome-driver")
-    testImplementation "org.testcontainers:spock:1.20.2"
-    testImplementation "org.testcontainers:selenium:1.20.2"
-
-    implementation "org.grails.plugins:cache"
+    compileOnly platform("org.apache.grails:grails-bom:$grailsVersion")
+    compileOnly 'org.apache.grails:grails-dependencies-starter-web'
+    implementation "org.apache.grails:grails-cache"
 
     // https://mvnrepository.com/artifact/com.google.guava/guava
-    implementation 'com.google.guava:guava:33.3.1-jre'
-}
-
-application {
-    mainClass.set("grails.cache.guava.Application")
+    implementation "com.google.guava:guava:${guavaVersion}"
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion("11")
+    sourceCompatibility = JavaVersion.VERSION_17
 }
 
-tasks.withType(Test) {
-    useJUnitPlatform()
-    systemProperty "geb.env", System.getProperty('geb.env')
-    systemProperty "geb.build.reportsDir", reporting.file("geb/integrationTest")
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = project.group
-            artifactId = project.name
-            version = project.version
-
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-
-            pom {
-                name = 'grails-cache-guava'
-                description = 'The guava cache provides a simple in memory cache with maximal capacity and TTL.'
-                url = 'https://github.com/gpc/grails-cache-guava'
-                licenses {
-                    license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-                developers {
-                    developer {
-                        id = 'sbglasius'
-                        name = 'Søren Berg Glasius'
-                        email = 'soeren+gpc@glasius.dk'
-                    }
-                }
-                scm {
-                    connection = 'scm:git:git://github.com/gpc/grails-cache-guava.git'
-                    developerConnection = 'scm:git:https://github.com/gpc/grails-cache-guava.git'
-                    url = 'https://github.com/gpc/grails-cache-guava'
-                }
-            }
-        }
+grailsPublish {
+    githubSlug = 'gpc/grails-cache-guava'
+    license {
+        name = 'Apache-2.0'
     }
-}
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-
-if (System.getenv('SIGNING_KEY_ID')) {
-    ext["signing.keyId"] = System.getenv('SIGNING_KEY_ID')
-    ext["signing.password"] = System.getenv('SIGNING_PASSPHRASE')
-    ext["signing.secretKeyRingFile"] = System.getenv('SIGNING_FILE')
-}
-
-afterEvaluate {
-    signing {
-        if (System.getenv('SIGN_ARMORED_KEY')) {
-            String signingKey = System.getenv('SIGN_ARMORED_KEY')
-            String signingPassword = System.getenv('SIGN_PASSWORD')
-            useInMemoryPgpKeys(signingKey, signingPassword)
-        }
-        required {
-            isReleaseVersion
-        }
-
-        sign publishing.publications.maven
-    }
-}
-
-tasks.withType(Sign).configureEach {
-    onlyIf { isReleaseVersion }
-}
-
-import io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository
-
-tasks.withType(InitializeNexusStagingRepository).configureEach {
-    shouldRunAfter(tasks.withType(Sign))
-}
-
-nexusPublishing {
-    repositories {
-        sonatype {
-            def ossUser = System.getenv("SONATYPE_USERNAME") ?: project.hasProperty("sonatypeOssUsername") ? project.sonatypeOssUsername : ''
-            def ossPass = System.getenv("SONATYPE_PASSWORD") ?: project.hasProperty("sonatypeOssPassword") ? project.sonatypeOssPassword : ''
-            def ossStagingProfileId = System.getenv("SONATYPE_STAGING_PROFILE_ID") ?: project.hasProperty("sonatypeOssStagingProfileIdExternalConfig") ? project.sonatypeOssStagingProfileIdExternalConfig : ''
-
-            nexusUrl = uri("https://s01.oss.sonatype.org/service/local/")
-            snapshotRepositoryUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            username = ossUser
-            password = ossPass
-            stagingProfileId = ossStagingProfileId
-        }
-    }
-}
-
-tasks.register('snapshotVersion') {
-    doLast {
-        if (isReleaseVersion) {
-            ant.propertyfile(file: "gradle.properties") {
-                entry(key: "version", value: "${project.version}-SNAPSHOT")
-            }
-        }
-    }
+    title = 'Grails Cache Guava Plugin'
+    desc = 'The Guava cache provides a simple in memory cache with maximal capacity and TTL.'
+    developers = [
+            sbglasius   : 'Søren Berg Glasius'
+    ]
 }

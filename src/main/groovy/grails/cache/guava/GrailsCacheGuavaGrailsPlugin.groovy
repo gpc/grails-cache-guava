@@ -5,7 +5,7 @@ import grails.plugins.*
 class GrailsCacheGuavaGrailsPlugin extends Plugin {
 
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "3.3.5 > *"
+    def grailsVersion = "7.0.0 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
         '**/com/demo/**',
@@ -33,17 +33,17 @@ The guava cache provides a simple in memory cache with maximal capacity and TTL.
     def organization = [ name: "IT & Design Solutions GmbH", url: "https://www.itds.ch/" ]
 
     // Any additional developers beyond the author specified above.
-//    def developers = [ [ name: "Joe Bloggs", email: "joe@bloggs.net" ]]
+    def developers = [ [ name: "Søren Berg Glasius", email: "soeren@glasius.dk" ]]
 
     // Location of the plugin's issue tracker.
-    def issueManagement = [ system: "GitHub", url: "https://github.com/itds-ch/grails-cache-guava/issues" ]
+    def issueManagement = [ system: "GitHub", url: "https://github.com/gpc/grails-cache-guava/issues" ]
 
     // Online location of the plugin's browseable source code.
-    def scm = [ url: "https://github.com/itds-ch/grails-cache-guava" ]
+    def scm = [ url: "https://github.com/gpc/grails-cache-guava" ]
 
     def loadAfter = ['cache']
 
-    def dependsOn = [cache: "4.0.0 > *"]
+    def dependsOn = [cache: "7.0.0 > *"]
 
     private boolean isCachingEnabled() {
         config.getProperty('grails.cache.enabled', Boolean, true)
