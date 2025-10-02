@@ -13,3 +13,5 @@ pluginManagement {
 }
 
 rootProject.name = "grails-cache-guava"
+
+include 'example'
