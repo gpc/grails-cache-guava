@@ -72,3 +72,5 @@ grailsPublish {
             sbglasius   : 'Søren Berg Glasius'
     ]
 }
+
+apply from: './gradle/post-publish.gradle'
